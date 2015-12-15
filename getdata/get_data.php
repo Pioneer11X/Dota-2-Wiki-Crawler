@@ -1,6 +1,7 @@
 <?php
 
-include "helpers.php";
+include "/var/www/sravan/appdata/getdata/settings.php";
+include DOCUMENT_ROOT . "getdata/helpers.php";
 
 $hero_list_page = "http://www.dota2.com/heroes/";
 
@@ -71,11 +72,12 @@ foreach ( $hero_names as $hero ){
 		$abilitiesArray[] = $ability_string->item(0)->nodeValue;
 	}
 	$outputArray[$hero]['abilityNames'] = $abilitiesArray;
+	$outputArray[$hero]['portraitUrl'] = $portraitUrl;
 }
 
 $outputJson = json_encode($outputArray);
 
-$fp = fopen("heroes.json","w");
+$fp = fopen(DOCUMENT_ROOT ."resources/heroes.json","w");
 $retVal = fwrite($fp,$outputJson);
 fclose($fp);
 
