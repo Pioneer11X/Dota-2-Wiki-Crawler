@@ -88,6 +88,8 @@ function get_image_url($xPath){
 	$imageNode = $xPath->query($xpath_query['heroPortrait']);
 	$imageUrl = $imageNode->item(0)->getAttribute("src");
 
+	$imageUrl = clean_image_url ( $imageUrl );
+
 	return $imageUrl;
 }
 

@@ -58,4 +58,9 @@ function get_content($URL,
     return $data;
 }
 
+function clean_image_url ( $url ){
+	$explodedArray = explode("?",$url);
+	return $explodedArray[0];
+}
+
 ?>
