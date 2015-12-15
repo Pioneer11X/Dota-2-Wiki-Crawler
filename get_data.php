@@ -30,7 +30,8 @@ if (($key = array_search('All', $hero_names)) !== false) {
 
 // We now need to add underscores instead of spaces in the names
 foreach( $hero_names as $key=>$hero_name ){
-	$hero_names[$key] = str_replace(" ", "_", $hero_name );
+	$hero_names[$key] = str_replace(" ", "_", $hero_names[$key] );
+	$hero_names[$key] = str_replace("'", "", $hero_names[$key]  );
 }
 
 
@@ -40,6 +41,11 @@ $base_url = "http://www.dota2.com/hero/";
 // We then automate the process to run once a day, and update our app accordingly.
 
 $ouputArray = array();
+
+$xpath_query = array();
+$xpath_query['abilities'] = '//*[@class="overviewAbilityRowDescription"]';
+$xpath_query['abilityName'] = './/h2/text()';
+$xpath_query['heroPortrait'] = '//*[@id="heroTopPortraitContainer"]//img';
 
 foreach ( $hero_names as $hero ){
 
@@ -52,14 +58,14 @@ foreach ( $hero_names as $hero ){
 
 	$abilitiesArray = array();
 
-	$xpath_query = array();
-	$xpath_query['abilities'] = '//*[@class="overviewAbilityRowDescription"]';
-	$xpath_query['abilityName'] = './/h2/text()';
-
-	$abilities = $xPath->query($xpath_query['abilities']);
-
 	echo "Hero Name: $hero\n";
 	echo "Hero Url: $hero_url\n";
+
+	$abilities = $xPath->query($xpath_query['abilities']);
+	$portraitUrl = get_image_url($xPath);
+
+	echo "portrait Url: $portraitUrl\n";
+	echo "\n";
 	foreach ( $abilities as $ability ){
 		$ability_string = $xPath->evaluate($xpath_query['abilityName'],$ability);
 		$abilitiesArray[] = $ability_string->item(0)->nodeValue;
@@ -73,6 +79,14 @@ $fp = fopen("heroes.json","w");
 $retVal = fwrite($fp,$outputJson);
 fclose($fp);
 
+function get_image_url($xPath){
 
+	global $xpath_query;
+
+	$imageNode = $xPath->query($xpath_query['heroPortrait']);
+	$imageUrl = $imageNode->item(0)->getAttribute("src");
+
+	return $imageUrl;
+}
 
 ?>
