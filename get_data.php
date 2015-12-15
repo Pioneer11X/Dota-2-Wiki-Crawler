@@ -4,6 +4,10 @@ include "helpers.php";
 
 $hero_list_page = "http://www.dota2.com/heroes/";
 
+// Logic to get the hero list.
+
+$hero_names = array();
+
 $list_crawl = get_content($hero_list_page);
 
 $listDom = new DOMDocument();
@@ -12,7 +16,22 @@ $listXPath = new DOMXPath($listDom);
 
 $list_xpath_query = '//*[@id="filterName"]//option/text()';
 $hero_options = $listXPath->query($list_xpath_query);
+foreach( $hero_options as $hero_option ){
+	$hero_names[] = $hero_option->nodeValue;
+}
 
+// We need to remove the first two nodes
+if (($key = array_search('HERO NAME', $hero_names)) !== false) {
+    unset($hero_names[$key]);
+}
+if (($key = array_search('All', $hero_names)) !== false) {
+    unset($hero_names[$key]);
+}
+
+// We now need to add underscores instead of spaces in the names
+foreach( $hero_names as $hero_name ){
+	str_replace(" ", "_", $hero_name );
+}
 
 
 $base_url = "http://www.dota2.com/hero/";
@@ -20,30 +39,7 @@ $base_url = "http://www.dota2.com/hero/";
 // We need to get the data of all the heroes and save it into a json file for our application to use.
 // We then automate the process to run once a day, and update our app accordingly.
 
-// Instead of populating the array like this, we can actually get the names from the option values in the page itself.
-$hero_names = array(
-		"Earthshaker",
-		"Sven",
-		"Tiny",
-		"Kunkka",
-		"Beastmaster",
-		"Dragon_Knight",
-		"Clockwerk",
-		"Omniknight",
-		"Huskar",
-		"Alchemist",
-		"Brewmaster",
-		"Treant_Protector",
-		"Io",
-		"Centaur_Warrunner",
-		"Timbersaw",
-		"Bristleback",
-		"Tusk",
-		"Elder_Titan",
-		"Legion_Commander",
-		"Earth_Spirit",
-		"Phoenix"
-	);
+$ouputArray = array();
 
 foreach ( $hero_names as $hero ){
 
@@ -51,6 +47,8 @@ foreach ( $hero_names as $hero ){
 	$dom = new DOMDocument();
 	@$dom->loadHTML($content);
 	$xPath = new DOMXPath($dom);
+
+	$abilitiesArray = array();
 
 	$xpath_query = array();
 	$xpath_query['abilities'] = '//*[@class="overviewAbilityRowDescription"]';
@@ -61,12 +59,17 @@ foreach ( $hero_names as $hero ){
 	echo "Hero Name: $hero\n";
 	foreach ( $abilities as $ability ){
 		$ability_string = $xPath->evaluate($xpath_query['abilityName'],$ability);
-		echo $ability_string->item(0)->nodeValue;
-		echo "\n";
+		$abilitiesArray[] = $ability_string->item(0)->nodeValue;
 	}
-	echo "\n";
-
+	$outputArray[$hero]['abilityNames'] = $abilitiesArray;
 }
+
+$outputJson = json_encode($outputArray);
+
+$fp = fopen("heroes.json","w");
+$retVal = fwrite($fp,$outputJson);
+fclose($fp);
+
 
 
 ?>
