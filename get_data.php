@@ -29,8 +29,8 @@ if (($key = array_search('All', $hero_names)) !== false) {
 }
 
 // We now need to add underscores instead of spaces in the names
-foreach( $hero_names as $hero_name ){
-	str_replace(" ", "_", $hero_name );
+foreach( $hero_names as $key=>$hero_name ){
+	$hero_names[$key] = str_replace(" ", "_", $hero_name );
 }
 
 
@@ -43,7 +43,9 @@ $ouputArray = array();
 
 foreach ( $hero_names as $hero ){
 
-	$content = get_content($base_url.$hero."/");
+	$hero_url = $base_url . $hero . "/";
+
+	$content = get_content($hero_url);
 	$dom = new DOMDocument();
 	@$dom->loadHTML($content);
 	$xPath = new DOMXPath($dom);
@@ -57,6 +59,7 @@ foreach ( $hero_names as $hero ){
 	$abilities = $xPath->query($xpath_query['abilities']);
 
 	echo "Hero Name: $hero\n";
+	echo "Hero Url: $hero_url\n";
 	foreach ( $abilities as $ability ){
 		$ability_string = $xPath->evaluate($xpath_query['abilityName'],$ability);
 		$abilitiesArray[] = $ability_string->item(0)->nodeValue;
