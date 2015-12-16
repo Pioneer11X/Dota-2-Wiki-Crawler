@@ -46,7 +46,9 @@ $ouputArray = array();
 $xpath_query = array();
 $xpath_query['abilities'] = '//*[@class="overviewAbilityRowDescription"]';
 $xpath_query['abilityName'] = './/h2/text()';
+$xpath_query['abilityDescription'] = './/p/text()';
 $xpath_query['heroPortrait'] = '//*[@id="heroTopPortraitContainer"]//img';
+$xpath_query['heroProfile'] = '//*[@id="heroPrimaryPortraitImg"]';
 
 foreach ( $hero_names as $hero ){
 
@@ -57,22 +59,26 @@ foreach ( $hero_names as $hero ){
 	@$dom->loadHTML($content);
 	$xPath = new DOMXPath($dom);
 
-	$abilitiesArray = array();
+	$abilityArray = array();
 
 	echo "Hero Name: $hero\n";
 	echo "Hero Url: $hero_url\n";
 
 	$abilities = $xPath->query($xpath_query['abilities']);
-	$portraitUrl = get_image_url($xPath);
+	$portraitUrl = get_portrait_url($xPath);
+	$profileUrl = get_profile_image_url($xPath);
 
 	echo "portrait Url: $portraitUrl\n";
+	echo "Profile Url: $profileUrl\n";
 	echo "\n";
 	foreach ( $abilities as $ability ){
-		$ability_string = $xPath->evaluate($xpath_query['abilityName'],$ability);
-		$abilitiesArray[] = $ability_string->item(0)->nodeValue;
+		$abilityNameNode = $xPath->evaluate($xpath_query['abilityName'],$ability);
+		$abilityNameString = $abilityNameNode->item(0)->nodeValue;
+		$abilityDescriptionNode = $xPath->evaluate($xpath_query['abilityDescription'],$ability);
+		$abilityDescriptionString = $abilityDescriptionNode->item(0)->nodeValue;
+		$abilityArray[$abilityNameString] = array($abilityDescriptionString); // We can use this array shit to add other things like Mana Cost and numbers
 	}
-	$outputArray[$hero]['abilityNames'] = $abilitiesArray;
-	$outputArray[$hero]['portraitUrl'] = $portraitUrl;
+	$outputArray[$hero]['abilities'] = $abilityArray;
 }
 
 $outputJson = json_encode($outputArray);
@@ -81,11 +87,23 @@ $fp = fopen(DOCUMENT_ROOT ."resources/heroes.json","w");
 $retVal = fwrite($fp,$outputJson);
 fclose($fp);
 
-function get_image_url($xPath){
+function get_portrait_url($xPath){
 
 	global $xpath_query;
 
 	$imageNode = $xPath->query($xpath_query['heroPortrait']);
+	$imageUrl = $imageNode->item(0)->getAttribute("src");
+
+	$imageUrl = clean_image_url ( $imageUrl );
+
+	return $imageUrl;
+}
+
+function get_profile_image_url ($xPath ){
+
+	global $xpath_query;
+
+	$imageNode = $xPath->query($xpath_query['heroProfile']);
 	$imageUrl = $imageNode->item(0)->getAttribute("src");
 
 	$imageUrl = clean_image_url ( $imageUrl );
