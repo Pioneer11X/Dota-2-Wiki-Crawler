@@ -57,6 +57,8 @@ $xpath_query['attackVal'] = '//*[@id="overview_AttackVal"]';
 $xpath_query['speedVal'] = '//*[@id="overview_SpeedVal"]';
 $xpath_query['defenseVal'] = '//*[@id="overview_DefenseVal"]';
 
+$portraitArray = array();
+
 foreach ( $hero_names as $hero ){
 
 	$hero_url = $base_url . $hero . "/";
@@ -74,9 +76,14 @@ foreach ( $hero_names as $hero ){
 	$abilities = $xPath->query($xpath_query['abilities']);
 	$portraitUrl = get_portrait_url($xPath);
 	$profileUrl = get_profile_image_url($xPath);
+	
 
 	echo "portrait Url: $portraitUrl\n";
 	echo "Profile Url: $profileUrl\n";
+
+	$portraitName = str_replace("http://cdn.dota2.com/apps/dota2/images/heroes/","",$portraitUrl);
+	$portraitArray[$hero] = $portraitName;
+
 	echo "\n";
 	foreach ( $abilities as $ability ){
 		$abilityNameNode = $xPath->evaluate($xpath_query['abilityName'],$ability);
@@ -99,10 +106,13 @@ foreach ( $hero_names as $hero ){
 }
 
 $outputJson = json_encode($outputArray);
+$portraitJson = json_encode($portraitArray);
 
 $fp = fopen(DOCUMENT_ROOT ."resources/heroes.json","w");
 $retVal = fwrite($fp,$outputJson);
 fclose($fp);
+$portFp = fopen(DOCUMENT_ROOT ."resources/portrait.json","w");
+$retVal = fwrite($portFp,$portraitJson);
 
 function get_stats($xPath){
 
