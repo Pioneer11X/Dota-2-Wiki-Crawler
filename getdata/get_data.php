@@ -49,6 +49,13 @@ $xpath_query['abilityName'] = './/h2/text()';
 $xpath_query['abilityDescription'] = './/p/text()';
 $xpath_query['heroPortrait'] = '//*[@id="heroTopPortraitContainer"]//img';
 $xpath_query['heroProfile'] = '//*[@id="heroPrimaryPortraitImg"]';
+$xpath_query['heroBio'] = '//*[@id="bioInner"]';
+$xpath_query['intVal'] = '//*[@id="overview_IntVal"]';
+$xpath_query['strVal'] = '//*[@id="overview_StrVal"]';
+$xpath_query['agiVal'] = '//*[@id="overview_AgiVal"]';
+$xpath_query['attackVal'] = '//*[@id="overview_AttackVal"]';
+$xpath_query['speedVal'] = '//*[@id="overview_SpeedVal"]';
+$xpath_query['defenseVal'] = '//*[@id="overview_DefenseVal"]';
 
 foreach ( $hero_names as $hero ){
 
@@ -76,9 +83,19 @@ foreach ( $hero_names as $hero ){
 		$abilityNameString = $abilityNameNode->item(0)->nodeValue;
 		$abilityDescriptionNode = $xPath->evaluate($xpath_query['abilityDescription'],$ability);
 		$abilityDescriptionString = $abilityDescriptionNode->item(0)->nodeValue;
-		$abilityArray[$abilityNameString] = array($abilityDescriptionString); // We can use this array shit to add other things like Mana Cost and numbers
+		$abilityArray[$abilityNameString]['Description'] = array($abilityDescriptionString); // We can use this array shit to add other things like Mana Cost and numbers
 	}
+
+	$heroBio = $xPath->query($xpath_query['heroBio']);
+	$heroBioString = trim($heroBio->item(0)->nodeValue);
+
+	$stats = array();
+
+	$stats = get_stats($xPath);
+
 	$outputArray[$hero]['abilities'] = $abilityArray;
+	$outputArray[$hero]['bio'] = $heroBioString;
+	$outputArray[$hero]['stats'] = $stats;
 }
 
 $outputJson = json_encode($outputArray);
@@ -86,6 +103,49 @@ $outputJson = json_encode($outputArray);
 $fp = fopen(DOCUMENT_ROOT ."resources/heroes.json","w");
 $retVal = fwrite($fp,$outputJson);
 fclose($fp);
+
+function get_stats($xPath){
+
+	global $xpath_query;
+
+	$attributeArray = array("str","int","agi");
+
+	$stats = array();
+
+	foreach ( $attributeArray as $attribute ){
+
+		$attributeNode = $xPath->query($xpath_query["$attribute"."Val"]);
+		$attributeString = $attributeNode->item(0)->nodeValue;
+		$attributeExplodedArray = get_exploded_stats_array($attributeString);
+		$baseAttribute = $attributeExplodedArray[0];
+		$attributeGrowth = $attributeExplodedArray[1];
+		$stats[$attribute] = array("base"=>$baseAttribute,"growth"=>"$attributeGrowth");
+
+	}
+	
+	$attackNode = $xPath->query($xpath_query["attackVal"]);
+	$attackString = $attackNode->item(0)->nodeValue;
+	$attackStringExplodedArray = explode(" - ",$attackString);
+	$baseAttack = $attackStringExplodedArray[0];
+	$highAttack = $attackStringExplodedArray[1];
+
+	$stats["baseAttackDamage"] = array("min"=>$baseAttack,"max"=>$highAttack);
+
+	$speedNode = $xPath->query($xpath_query["speedVal"]);
+	$speedString = $speedNode->item(0)->nodeValue;
+
+	$stats["baseMoveSpeed"] = $speedString;
+
+	
+	$defenseNode = $xPath->query($xpath_query["defenseVal"]);
+	$defenseString = $defenseNode->item(0)->nodeValue;
+
+	$stats["baseArmour"] = $defenseString;
+
+
+	return $stats;
+
+}
 
 function get_portrait_url($xPath){
 
@@ -109,6 +169,11 @@ function get_profile_image_url ($xPath ){
 	$imageUrl = clean_image_url ( $imageUrl );
 
 	return $imageUrl;
+}
+
+function get_exploded_stats_array( $string  ){
+	$returnArray = explode ( " + " , $string );
+	return $returnArray;
 }
 
 ?>
