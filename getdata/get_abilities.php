@@ -11,6 +11,7 @@ foreach ( $jsonArray as $heroName=>$data ){
 }
 
 $jsonString = json_encode($abilitiesArray);
+$jsonString = str_replace(array("{","}"),array("[","]"),$jsonString);
 
 file_put_contents($newFile,$jsonString);
 
