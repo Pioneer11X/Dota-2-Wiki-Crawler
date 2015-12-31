@@ -1,20 +1,31 @@
 <?php
 
 $fp = file_get_contents("../resources/heroes.json","r");
-$newFile = "../resources/abilities.json";
+$abilityNamesFile = "../resources/abilityNames.json";
+$abilityDescriptionFile = "../resources/abilityDescription.json";
 
 $jsonArray = json_decode($fp,true);
-$abilitiesArray = array();
+$abilityNameArray = array();
+$abilityDescriptionArray = array();
 
 foreach ( $jsonArray as $heroName=>$data ){
-	$abilitiesArray[$heroName] = $data["abilities"];
+
+	$abilityNameArray[$heroName] = array();
+	foreach ( $data["abilities"] as $abilityName=>$descriptionArray ){
+		$abilityNameArray[$heroName][] = $abilityName;
+		$abilityDescriptionArray[$heroName][] = $descriptionArray["Description"][0];
+	}
 }
 
-$jsonString = json_encode($abilitiesArray);
+$jsonString = json_encode($abilityNameArray);
 $jsonString = str_replace(array("{","}","\\"),array("[","]",""),$jsonString);
 
+file_put_contents($abilityNamesFile,$jsonString);
 
-file_put_contents($newFile,$jsonString);
+$jsonString = json_encode($abilityDescriptionArray);
+$jsonString = str_replace(array("{","}","\\"),array("[","]",""),$jsonString);
+
+file_put_contents($abilityDescriptionFile,$jsonString);
 
 //echo $jsonArray["Axe"]["bio"];
 
